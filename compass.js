@@ -35,7 +35,6 @@ function normalizeAngle(a) {
 }
 
 function updateMessage(heading) {
-    if (qiblaBearing == null) return;
     const diff = Math.abs(normalizeAngle(qiblaBearing - heading));
     if (diff <= 12) {
         messageEl.textContent = "القبلة في هذا الاتجاه";
@@ -60,7 +59,7 @@ function handleOrientation(event) {
     heading = (heading + 360) % 360;
 
     compassBackground.style.transform = `rotate(${-heading}deg)`;
-
+    needle.style.transform = "rotate(0deg)";
     qiblaMarker.style.transform =
         `translateX(-50%) rotate(${qiblaBearing - heading}deg)`;
 
