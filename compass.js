@@ -59,7 +59,7 @@ function normalizeAngle(a) {
 /* تغيير الرسالة حسب وضع القبلة */
 function updateMessage(heading) {
     const diff = Math.abs(normalizeAngle(qiblaBearing - heading));
-    if (diff <= 12) {
+    if (diff <= 5) {
         messageEl.textContent = "القبلة في هذا الاتجاه";
     } else {
         messageEl.textContent = "اتجه نحو القبلة";
