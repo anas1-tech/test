@@ -3,18 +3,18 @@ const messageEl = document.getElementById("message");
 
 const compassBackground = document.getElementById("compassBackground");
 const qiblaMarker = document.getElementById("qiblaMarker");
+const needle = document.getElementById("needle");
 
 const kaabaLat = 21.4225 * Math.PI / 180;
 const kaabaLng = 39.8262 * Math.PI / 180;
 
 let qiblaBearing = null;
+let running = true;   // ← دائما شغّال
 
-/* تحويلات */
-const degToRad = d => d * Math.PI / 180;
-const radToDeg = r => r * 180 / Math.PI;
+function degToRad(d) { return d * Math.PI / 180; }
+function radToDeg(r) { return r * 180 / Math.PI; }
 
-/* حساب القبلة */
-function computeQibla(latDeg, lngDeg) {
+function computeQiblaBearing(latDeg, lngDeg) {
     const lat = degToRad(latDeg);
     const lng = degToRad(lngDeg);
     const dLng = kaabaLng - lng;
@@ -23,60 +23,81 @@ function computeQibla(latDeg, lngDeg) {
     const x = Math.cos(lat) * Math.sin(kaabaLat) -
               Math.sin(lat) * Math.cos(kaabaLat) * Math.cos(dLng);
 
-    return (radToDeg(Math.atan2(y, x)) + 360) % 360;
+    let brng = radToDeg(Math.atan2(y, x));
+    return (brng + 360) % 360;
 }
 
-function handleOrientation(event) {
-    if (!qiblaBearing) return;
+function normalizeAngle(a) {
+    if (a > 180) a -= 360;
+    if (a < -180) a += 360;
+    return a;
+}
 
-    let heading;
-
-    if (event.webkitCompassHeading != null) {
-        heading = event.webkitCompassHeading;
-    } else {
-        if (event.alpha == null) return;
-        heading = (360 - event.alpha);
-    }
-
-    heading = (heading + 360) % 360;
-
-    compassBackground.style.transform = `rotate(${-heading}deg)`;
-
-    qiblaMarker.style.transform =
-        `translateX(-50%) rotate(${qiblaBearing - heading}deg)`;
-
-    const diff = Math.abs((qiblaBearing - heading + 540) % 360 - 180);
-
-    if (diff < 12) {
+function updateMessage(heading) {
+    const diff = Math.abs(normalizeAngle(qiblaBearing - heading));
+    if (diff <= 12) {
         messageEl.textContent = "القبلة في هذا الاتجاه";
     } else {
         messageEl.textContent = "اتجه نحو القبلة";
     }
 }
 
-/* طلب الموقع */
-navigator.geolocation.getCurrentPosition(pos => {
-    const lat = pos.coords.latitude;
-    const lng = pos.coords.longitude;
+function handleOrientation(event) {
+    if (!running) return;
 
-    qiblaBearing = computeQibla(lat, lng);
-    statusEl.textContent = "تم تحديد موقعك.";
+    let heading;
 
-    /* طلب إذن الحساسات */
-    if (typeof DeviceOrientationEvent?.requestPermission === "function") {
-        DeviceOrientationEvent.requestPermission().then(res => {
-            if (res === "granted") {
-                window.addEventListener("deviceorientation", handleOrientation);
-                statusEl.textContent = "جاهز.";
-            } else {
-                statusEl.textContent = "تم رفض إذن البوصلة.";
-            }
-        });
+    if (event.webkitCompassHeading != null) {
+        heading = event.webkitCompassHeading;
     } else {
-        window.addEventListener("deviceorientation", handleOrientation);
-        statusEl.textContent = "جاهز.";
+        const alpha = event.alpha;
+        if (alpha == null) return;
+        heading = (360 - alpha);
     }
 
-}, err => {
-    statusEl.textContent = "تعذر تحديد موقعك.";
-});
+    heading = (heading + 360) % 360;
+
+    // خلفية الاتجاهات
+    compassBackground.style.transform = `rotate(${-heading}deg)`;
+
+    // الإبرة ثابتة — لا ندورها
+    needle.style.transform = "rotate(0deg)";
+
+    // سهم القبلة
+    qiblaMarker.style.transform =
+        `translateX(-50%) rotate(${qiblaBearing - heading}deg)`;
+
+    updateMessage(heading);
+}
+
+function getLocationAndStart() {
+    statusEl.textContent = "جاري تحديد موقعك...";
+
+    navigator.geolocation.getCurrentPosition(pos => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+
+        qiblaBearing = computeQiblaBearing(lat, lng);
+        statusEl.textContent = "تم تحديد موقعك.";
+
+        // تشغيل حساس الاتجاه
+        if (typeof DeviceOrientationEvent?.requestPermission === "function") {
+            DeviceOrientationEvent.requestPermission().then(res => {
+                if (res === "granted") {
+                    window.addEventListener("deviceorientation", handleOrientation, true);
+                } else {
+                    statusEl.textContent = "لم يتم السماح بالوصول للحساسات.";
+                }
+            });
+        } else {
+            window.addEventListener("deviceorientation", handleOrientation, true);
+        }
+
+    }, err => {
+        statusEl.textContent = "تعذر تحديد الموقع.";
+    }, { enableHighAccuracy: true });
+}
+
+
+// بدء التشغيل تلقائي:
+getLocationAndStart();
