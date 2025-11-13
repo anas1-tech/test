@@ -66,19 +66,17 @@ function handleOrientation(event) {
     updateMessage(heading);
 }
 
-function getLocation() {
-    statusEl.textContent = "جاري تحديد موقعك...";
+function computeQiblaBearing(latDeg, lngDeg) {
+    const lat = degToRad(latDeg);
+    const lng = degToRad(lngDeg);
+    const dLng = kaabaLng - lng;
 
-    navigator.geolocation.getCurrentPosition(pos => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
+    const y = Math.sin(dLng) * Math.cos(kaabaLat);
+    const x = Math.cos(lat) * Math.sin(kaabaLat) -
+              Math.sin(lat) * Math.cos(kaabaLat) * Math.cos(dLng);
 
-        qiblaBearing = computeQiblaBearing(lat, lng);
-        statusEl.textContent = "تم تحديد اتجاه القبلة.";
-
-    }, err => {
-        statusEl.textContent = "تعذر تحديد الموقع.";
-    }, { enableHighAccuracy: true });
+    let brng = radToDeg(Math.atan2(y, x));
+    return (brng + 360) % 360;
 }
 
 function startCompass() {
