@@ -9,7 +9,7 @@ const kaabaLat = 21.4225 * Math.PI / 180;
 const kaabaLng = 39.8262 * Math.PI / 180;
 
 let qiblaBearing = null;
-let running = true;   // ← دائما شغّال
+let running = true; // ← تشغيل دائم
 
 function degToRad(d) { return d * Math.PI / 180; }
 function radToDeg(r) { return r * 180 / Math.PI; }
@@ -23,8 +23,7 @@ function computeQiblaBearing(latDeg, lngDeg) {
     const x = Math.cos(lat) * Math.sin(kaabaLat) -
               Math.sin(lat) * Math.cos(kaabaLat) * Math.cos(dLng);
 
-    let brng = radToDeg(Math.atan2(y, x));
-    return (brng + 360) % 360;
+    return (radToDeg(Math.atan2(y, x)) + 360) % 360;
 }
 
 function normalizeAngle(a) {
@@ -57,47 +56,38 @@ function handleOrientation(event) {
 
     heading = (heading + 360) % 360;
 
-    // خلفية الاتجاهات
     compassBackground.style.transform = `rotate(${-heading}deg)`;
 
-    // الإبرة ثابتة — لا ندورها
-    needle.style.transform = "rotate(0deg)";
-
-    // سهم القبلة
     qiblaMarker.style.transform =
         `translateX(-50%) rotate(${qiblaBearing - heading}deg)`;
 
     updateMessage(heading);
 }
 
-function getLocationAndStart() {
-    statusEl.textContent = "جاري تحديد موقعك...";
+function startAutoCompass(lat, lng) {
+    qiblaBearing = computeQiblaBearing(lat, lng);
+    statusEl.textContent = "تم تحديد موقعك.";
 
-    navigator.geolocation.getCurrentPosition(pos => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-
-        qiblaBearing = computeQiblaBearing(lat, lng);
-        statusEl.textContent = "تم تحديد موقعك.";
-
-        // تشغيل حساس الاتجاه
-        if (typeof DeviceOrientationEvent?.requestPermission === "function") {
-            DeviceOrientationEvent.requestPermission().then(res => {
-                if (res === "granted") {
-                    window.addEventListener("deviceorientation", handleOrientation, true);
-                } else {
-                    statusEl.textContent = "لم يتم السماح بالوصول للحساسات.";
-                }
-            });
-        } else {
-            window.addEventListener("deviceorientation", handleOrientation, true);
-        }
-
-    }, err => {
-        statusEl.textContent = "تعذر تحديد الموقع.";
-    }, { enableHighAccuracy: true });
+    if (typeof DeviceOrientationEvent?.requestPermission === "function") {
+        DeviceOrientationEvent.requestPermission().then(res => {
+            if (res === "granted") {
+                window.addEventListener("deviceorientation", handleOrientation, true);
+            } else {
+                statusEl.textContent = "لم يتم السماح بالوصول للحساسات.";
+            }
+        });
+    } else {
+        window.addEventListener("deviceorientation", handleOrientation, true);
+    }
 }
 
-
-// بدء التشغيل تلقائي:
-getLocationAndStart();
+// تشغيل تلقائي بمجرد فتح الصفحة
+navigator.geolocation.getCurrentPosition(
+    pos => {
+        startAutoCompass(pos.coords.latitude, pos.coords.longitude);
+    },
+    err => {
+        statusEl.textContent = "تعذر تحديد الموقع.";
+    },
+    { enableHighAccuracy: true }
+);
