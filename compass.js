@@ -4,13 +4,12 @@ const toggleBtn = document.getElementById("toggle");
 
 const compassBackground = document.getElementById("compassBackground");
 const qiblaMarker = document.getElementById("qiblaMarker");
-const needle = document.getElementById("needle");
 
 const kaabaLat = 21.4225 * Math.PI / 180;
 const kaabaLng = 39.8262 * Math.PI / 180;
 
 let qiblaBearing = null;
-let running = false; // افتراضيًا متوقف
+let running = false;
 
 function degToRad(d) { return d * Math.PI / 180; }
 function radToDeg(r) { return r * 180 / Math.PI; }
@@ -58,9 +57,7 @@ function handleOrientation(event) {
     heading = (heading + 360) % 360;
 
     compassBackground.style.transform = `rotate(${-heading}deg)`;
-
-    qiblaMarker.style.transform =
-        `translateX(-50%) rotate(${qiblaBearing - heading}deg)`;
+    qiblaMarker.style.transform = `translateX(-50%) rotate(${qiblaBearing - heading}deg)`;
 
     updateMessage(heading);
 }
@@ -72,7 +69,6 @@ function startCompass() {
     toggleBtn.classList.add("running");
 
     window.addEventListener("deviceorientation", handleOrientation, true);
-    statusEl.textContent = "البوصلة تعمل الآن.";
 }
 
 function stopCompass() {
@@ -82,22 +78,17 @@ function stopCompass() {
     toggleBtn.classList.remove("running");
 
     window.removeEventListener("deviceorientation", handleOrientation);
-    statusEl.textContent = "تم إيقاف البوصلة.";
 }
 
 function initLocation() {
     statusEl.textContent = "جاري تحديد موقعك...";
 
     navigator.geolocation.getCurrentPosition(pos => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-
-        qiblaBearing = computeQiblaBearing(lat, lng);
-        statusEl.textContent = "تم تحديد موقعك.";
-
-    }, err => {
+        qiblaBearing = computeQiblaBearing(pos.coords.latitude, pos.coords.longitude);
+        statusEl.textContent = "تم تحديد الاتجاه.";
+    }, () => {
         statusEl.textContent = "تعذر تحديد الموقع.";
-    }, { enableHighAccuracy: true });
+    });
 }
 
 toggleBtn.onclick = () => {
@@ -108,9 +99,3 @@ toggleBtn.onclick = () => {
         stopCompass();
     }
 };
-
-// تشغيل تلقائي إذا سبق السماح
-initLocation();
-startCompass();
-toggleBtn.classList.add("running");
-toggleBtn.textContent = "إيقاف";
