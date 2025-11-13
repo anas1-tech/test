@@ -64,30 +64,40 @@ function handleOrientation(event) {
     updateMessage(heading);
 }
 
-function startAutoCompass(lat, lng) {
-    qiblaBearing = computeQiblaBearing(lat, lng);
-    statusEl.textContent = "تم تحديد موقعك.";
-
+function enableOrientation() {
+    // أجهزة iPhone — إذا الإذن مُعطى سابقًا، يعمل مباشرة
     if (typeof DeviceOrientationEvent?.requestPermission === "function") {
-        DeviceOrientationEvent.requestPermission().then(res => {
-            if (res === "granted") {
-                window.addEventListener("deviceorientation", handleOrientation, true);
-            } else {
-                statusEl.textContent = "لم يتم السماح بالوصول للحساسات.";
-            }
-        });
+
+        // محاولة التشغيل بدون طلب إذن (إذا سبق ووافق المستخدم)
+        DeviceOrientationEvent.requestPermission()
+            .then(response => {
+                if (response === "granted") {
+                    window.addEventListener("deviceorientation", handleOrientation, true);
+                }
+            })
+            .catch(() => {
+                // لو المتصفح رفض هنا — ما نسوي شيء
+            });
+
     } else {
+        // أندرويد والمتصفحات العادية
         window.addEventListener("deviceorientation", handleOrientation, true);
     }
 }
 
-// تشغيل تلقائي بمجرد فتح الصفحة
+function initCompass(lat, lng) {
+    qiblaBearing = computeQiblaBearing(lat, lng);
+    statusEl.textContent = "تم تحديد موقعك.";
+
+    enableOrientation();
+}
+
 navigator.geolocation.getCurrentPosition(
     pos => {
-        startAutoCompass(pos.coords.latitude, pos.coords.longitude);
+        initCompass(pos.coords.latitude, pos.coords.longitude);
     },
     err => {
-        statusEl.textContent = "تعذر تحديد الموقع.";
+        statusEl.textContent = "تعذر تحديد موقعك.";
     },
     { enableHighAccuracy: true }
 );
