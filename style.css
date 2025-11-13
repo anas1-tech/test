@@ -114,19 +114,14 @@ h1 {
     font-weight: bold;
 }
 
-/* الإبرة (المثلث) — تم تعديلها فقط */
 #needle {
     position: absolute;
     width: 0;
     height: 0;
     border-style: solid;
-
-    /* مثلث رأسه لتحت */
-    border-width: 0 7px 100px 7px;
-    border-color: transparent transparent #c0392b transparent;
-
-    /* نقطة الارتكاز من أعلى الإبرة */
-    transform-origin: 50% 0;
+    border-width: 100px 7px 0 7px;
+    border-color: #c0392b transparent transparent transparent;
+    transform-origin: 50% 100px;
     filter: drop-shadow(0 5px 4px rgba(0,0,0,0.35));
 }
 
