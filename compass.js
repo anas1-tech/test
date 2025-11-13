@@ -1,5 +1,6 @@
 const statusEl = document.getElementById("status");
 const messageEl = document.getElementById("message");
+const toggleBtn = document.getElementById("toggle");
 
 const compassBackground = document.getElementById("compassBackground");
 const qiblaMarker = document.getElementById("qiblaMarker");
@@ -9,7 +10,7 @@ const kaabaLat = 21.4225 * Math.PI / 180;
 const kaabaLng = 39.8262 * Math.PI / 180;
 
 let qiblaBearing = null;
-let running = true; // ← تشغيل دائم
+let running = false; // افتراضيًا متوقف
 
 function degToRad(d) { return d * Math.PI / 180; }
 function radToDeg(r) { return r * 180 / Math.PI; }
@@ -64,40 +65,52 @@ function handleOrientation(event) {
     updateMessage(heading);
 }
 
-function enableOrientation() {
-    // أجهزة iPhone — إذا الإذن مُعطى سابقًا، يعمل مباشرة
-    if (typeof DeviceOrientationEvent?.requestPermission === "function") {
+function startCompass() {
+    running = true;
+    toggleBtn.textContent = "إيقاف";
+    toggleBtn.classList.remove("stopped");
+    toggleBtn.classList.add("running");
 
-        // محاولة التشغيل بدون طلب إذن (إذا سبق ووافق المستخدم)
-        DeviceOrientationEvent.requestPermission()
-            .then(response => {
-                if (response === "granted") {
-                    window.addEventListener("deviceorientation", handleOrientation, true);
-                }
-            })
-            .catch(() => {
-                // لو المتصفح رفض هنا — ما نسوي شيء
-            });
+    window.addEventListener("deviceorientation", handleOrientation, true);
+    statusEl.textContent = "البوصلة تعمل الآن.";
+}
 
+function stopCompass() {
+    running = false;
+    toggleBtn.textContent = "ابدأ";
+    toggleBtn.classList.add("stopped");
+    toggleBtn.classList.remove("running");
+
+    window.removeEventListener("deviceorientation", handleOrientation);
+    statusEl.textContent = "تم إيقاف البوصلة.";
+}
+
+function initLocation() {
+    statusEl.textContent = "جاري تحديد موقعك...";
+
+    navigator.geolocation.getCurrentPosition(pos => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+
+        qiblaBearing = computeQiblaBearing(lat, lng);
+        statusEl.textContent = "تم تحديد موقعك.";
+
+    }, err => {
+        statusEl.textContent = "تعذر تحديد الموقع.";
+    }, { enableHighAccuracy: true });
+}
+
+toggleBtn.onclick = () => {
+    if (!running) {
+        initLocation();
+        startCompass();
     } else {
-        // أندرويد والمتصفحات العادية
-        window.addEventListener("deviceorientation", handleOrientation, true);
+        stopCompass();
     }
-}
+};
 
-function initCompass(lat, lng) {
-    qiblaBearing = computeQiblaBearing(lat, lng);
-    statusEl.textContent = "تم تحديد موقعك.";
-
-    enableOrientation();
-}
-
-navigator.geolocation.getCurrentPosition(
-    pos => {
-        initCompass(pos.coords.latitude, pos.coords.longitude);
-    },
-    err => {
-        statusEl.textContent = "تعذر تحديد موقعك.";
-    },
-    { enableHighAccuracy: true }
-);
+// تشغيل تلقائي إذا سبق السماح
+initLocation();
+startCompass();
+toggleBtn.classList.add("running");
+toggleBtn.textContent = "إيقاف";
