@@ -1,7 +1,13 @@
 const prayerTimesEl = document.getElementById("prayer-times");
 const cityNameEl = document.getElementById("city-name");
 
+// تحديد المدينة تلقائياً حسب موقع المستخدم
 function detectLocation() {
+    if (!navigator.geolocation) {
+        prayerTimesEl.innerHTML = "المتصفح لا يدعم تحديد الموقع.";
+        return;
+    }
+
     navigator.geolocation.getCurrentPosition(
         position => {
             const lat = position.coords.latitude;
@@ -17,28 +23,40 @@ function detectLocation() {
     );
 }
 
+// جلب اسم المدينة من خلال API مجاني
 function getCityName(lat, lng) {
     fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=ar`)
         .then(res => res.json())
         .then(data => {
             cityNameEl.textContent = data.city || data.locality || "غير معروف";
+        })
+        .catch(() => {
+            cityNameEl.textContent = "غير معروف";
         });
 }
 
+// جلب مواقيت الصلاة من API
 function getPrayerTimes(lat, lng) {
-    fetch(`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lng}&method=4`)
+    const apiUrl = `https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lng}&method=4`;
+
+    fetch(apiUrl)
         .then(res => res.json())
         .then(data => {
-            const t = data.data.timings;
+            const timings = data.data.timings;
 
             prayerTimesEl.innerHTML = `
-                <div class="prayer"><span>الفجر</span><span>${t.Fajr}</span></div>
-                <div class="prayer"><span>الشروق</span><span>${t.Sunrise}</span></div>
-                <div class="prayer"><span>الظهر</span><span>${t.Dhuhr}</span></div>
-                <div class="prayer"><span>العصر</span><span>${t.Asr}</span></div>
-                <div class="prayer"><span>المغرب</span><span>${t.Maghrib}</span></div>
-                <div class="prayer"><span>العشاء</span><span>${t.Isha}</span></div>`;
+                <div class="prayer"><span>الفجر</span><span>${timings.Fajr}</span></div>
+                <div class="prayer"><span>الشروق</span><span>${timings.Sunrise}</span></div>
+                <div class="prayer"><span>الظهر</span><span>${timings.Dhuhr}</span></div>
+                <div class="prayer"><span>العصر</span><span>${timings.Asr}</span></div>
+                <div class="prayer"><span>المغرب</span><span>${timings.Maghrib}</span></div>
+                <div class="prayer"><span>العشاء</span><span>${timings.Isha}</span></div>
+            `;
+        })
+        .catch(() => {
+            prayerTimesEl.innerHTML = "حدث خطأ أثناء تحميل مواقيت الصلاة.";
         });
 }
 
+// تشغيل التحديد تلقائياً
 detectLocation();
