@@ -29,17 +29,18 @@
 
     <div class="wrapper">
 
-        <!-- 🔵 صندوق مواقيت الصلاة (يمين) -->
+        <!-- 🔵 صندوق مواقيت الصلاة -->
         <div class="card" style="width: 360px;">
             <h2>مواقيت الصلاة</h2>
-            <p class="city">📍 المدينة: <span id="city-name">Riyadh</span></p>
-            <div id="prayer-times">جارٍ التحميل...</div>
+            <p class="city">📍 المدينة: <span id="city-name">...</span></p>
+            <div id="prayer-times">جارٍ تحديد موقعك...</div>
         </div>
 
-        <!-- 🧭 صندوق البوصلة (يسار) -->
+        <!-- 🧭 صندوق البوصلة -->
         <div class="card">
+
             <h2>اتجاه القبلة</h2>
-            <div id="status">جاهز</div>
+            <div id="status">جاري طلب الإذن...</div>
 
             <div class="compass-container">
 
@@ -47,7 +48,7 @@
                     <div class="direction n">ش</div>
                     <div class="direction e">شـ</div>
                     <div class="direction s">ج</div>
-                    <div class="direction w">غ</div>
+                    <div class="direction w">غ</    div>
                 </div>
 
                 <div id="qiblaMarker">
@@ -55,6 +56,7 @@
                     <div class="q-text">🕋</div>
                 </div>
 
+                <!-- الإبرة (ثابتة ويعلوها رأس السهم لأعلى) -->
                 <div id="needle"></div>
                 <div id="needle-base"></div>
 
@@ -62,7 +64,6 @@
 
             <div id="message"></div>
 
-            <button id="toggle" class="stopped">ابدأ</button>
         </div>
     </div>
 
