@@ -5,41 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>مواقيت الصلاة واتجاه القبلة</title>
     <link rel="stylesheet" href="style.css">
-
-    <style>
-        .wrapper {
-            margin-top: 40px;
-            display: flex;
-            justify-content: center;
-            flex-direction: row-reverse;
-            gap: 30px;
-            flex-wrap: wrap;
-        }
-        .card {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-    </style>
 </head>
+
 <body>
 
     <h1>مواقيت الصلاة واتجاه القبلة</h1>
 
     <div class="wrapper">
 
-        <!-- 🔵 مواقيت الصلاة (يمين) -->
+        <!-- 🔵 مواقيت الصلاة -->
         <div class="card" style="width: 360px;">
             <h2>مواقيت الصلاة</h2>
             <p class="city">📍 المدينة: <span id="city-name">...</span></p>
             <div id="prayer-times">جارٍ التحميل...</div>
         </div>
 
-        <!-- 🧭 البوصلة (يسار) -->
+        <!-- 🧭 البوصلة -->
         <div class="card">
             <h2>اتجاه القبلة</h2>
-            <div id="status">جاري تحديد موقعك...</div>
+            <div id="status">جاري تحميل البوصلة...</div>
 
             <div class="compass-container">
 
@@ -62,11 +46,10 @@
 
             <div id="message"></div>
 
+            <button id="toggle" class="stopped">ابدأ</button>
         </div>
     </div>
 
     <script src="script.js"></script>
-    <script src="compass.js"></script>
-
 </body>
 </html>
